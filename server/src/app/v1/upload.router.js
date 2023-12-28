@@ -54,11 +54,19 @@ largeFileUploadRouter.post('/uploadfile', async (ctx) => {
   if (!fse.existsSync(chunkPath)) {
     await fse.mkdir(chunkPath)
   }
-  await fse.move(file.filepath, `${chunkPath}/${name}`)
-  ctx.body = {
-    status: 1,
-    mesaage: '切片上传成功',
-    data: null
+  try {
+    await fse.move(file.filepath, `${chunkPath}/${name}`)
+    ctx.body = {
+      status: 1,
+      mesaage: '切片上传成功',
+      data: null
+    }
+  } catch (error) {
+    ctx.body = {
+      status: 1001,
+      mesaage: '切片上传失败',
+      data: null
+    }
   }
 })
 

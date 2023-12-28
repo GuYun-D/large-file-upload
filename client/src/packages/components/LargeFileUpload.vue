@@ -77,12 +77,37 @@ export default {
         form.append('hash', chunk.hash)
         form.append('name', chunk.name)
         return { form, index: chunk.index, error: 0 }
-      }).map(({ form }) => {
-        return upaloadFileApi(form)
       })
 
-      await Promise.all(requests)
-      this.$message.success("切片上传成功")
+      const sendRequest = () => {
+        return new Promise((resolve, reject) => {
+          const uploadReq = (i) => {
+            const requestItem = requests[i]
+            const { form } = requestItem
+            upaloadFileApi(form).then(() => {
+              // 最后一个切片上传成功才算成功
+              if (i === requests.length - 1) {
+                resolve()
+                return
+              }
+              uploadReq(++i)
+            }).catch((error) => {
+              console.log("报错了", error);
+              if (requestItem.error < 3) {
+                requestItem.error++
+                uploadReq(i)
+              } else {
+                reject(new Error("切片上传失败"))
+              }
+            })
+          }
+
+          uploadReq(0)
+        })
+      }
+
+      await sendRequest()
+      // this.$message.success("切片上传成功")
       this.mergeFileSlices()
     },
 
