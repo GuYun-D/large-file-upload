@@ -79,34 +79,45 @@ export default {
         return { form, index: chunk.index, error: 0 }
       })
 
-      const sendRequest = () => {
+      const sendRequest = (limit = 1, task = []) => {
+        let count = 0 // 用于记录请求成功次数
+        let isStop = false // 标记切片上传错误情况，如果 >= 3 次 直接停止
+        const allTackLength = requests.length
         return new Promise((resolve, reject) => {
-          const uploadReq = (i) => {
-            const requestItem = requests[i]
+          const uploadReq = () => {
+            if (isStop) return
+            const requestItem = requests.shift()
+            if (!requestItem) return
             const { form } = requestItem
+
             upaloadFileApi(form).then(() => {
               // 最后一个切片上传成功才算成功
-              if (i === requests.length - 1) {
+              if (count >= allTackLength - 1) {
                 resolve()
-                return
+              } else {
+                count++
+                uploadReq()
               }
-              uploadReq(++i)
-            }).catch((error) => {
-              console.log("报错了", error);
+            }).catch(() => {
               if (requestItem.error < 3) {
                 requestItem.error++
-                uploadReq(i)
+                requests.unshift(requestItem)
+                uploadReq()
               } else {
+                isStop = true
                 reject(new Error("切片上传失败"))
               }
             })
           }
 
-          uploadReq(0)
+          while (limit > 0) {
+            uploadReq()
+            limit--
+          }
         })
       }
 
-      await sendRequest()
+      await sendRequest(3)
       // this.$message.success("切片上传成功")
       this.mergeFileSlices()
     },
