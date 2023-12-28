@@ -12,8 +12,8 @@
 </template>
 
 <script>
-import { checkFile, upaloadFileApi, mergeFileSlicesApi } from '../api'
-import { createChunk, calcSliceHash } from '../utils'
+import { checkFile, upaloadFileApi, mergeFileSlicesApi } from '../api/index'
+import { createChunk, calcSliceHash } from '../utils/index'
 import { largeFileUploadConfig } from '../config/index'
 
 export default {

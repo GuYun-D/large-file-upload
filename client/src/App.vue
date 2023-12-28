@@ -1,22 +1,24 @@
 <template>
   <div class="upload-wrap">
-    <LargeFileUpload></LargeFileUpload>
+    <!-- <LargeFileUpload></LargeFileUpload> -->
+    <BeeLargrFileUpload></BeeLargrFileUpload>
   </div>
 </template>
 
 <script>
-import LargeFileUpload from './packages/components/LargeFileUpload'
+// import LargeFileUpload from './packages/components/LargeFileUpload'
+import { BeeLargrFileUpload } from './packages/dist/bee-large-file-upload.es'
 
 export default {
   name: 'App',
   components: {
-    LargeFileUpload
+    BeeLargrFileUpload
   }
 }
 </script>
 
 <style>
-.upload-wrap{
+.upload-wrap {
   width: 600px;
   height: 600px;
   display: flex;

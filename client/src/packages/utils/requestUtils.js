@@ -2,7 +2,7 @@ import axios from 'axios'
 import { Message } from 'element-ui'
 
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:3000',
   timeout: 500000
 })
 

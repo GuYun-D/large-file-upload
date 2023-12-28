@@ -1,6 +1,6 @@
 const Koa = require('koa')
 const KoaRouter = require('koa-router')
-const {koaBody} = require('koa-body')
+const { koaBody } = require('koa-body')
 const requireDirectory = require('require-directory')
 
 class App {
@@ -18,6 +18,17 @@ class App {
         multipart: true
       })
     )
+
+    app.use(async (ctx, next) => {
+      ctx.set('Access-Control-Allow-Origin', '*')
+      ctx.set('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild')
+      ctx.set('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS')
+      if (ctx.method == 'OPTIONS') {
+        ctx.body = 200
+      } else {
+        await next()
+      }
+    })
     App.app = app
   }
 
