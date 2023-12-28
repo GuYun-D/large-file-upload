@@ -12,12 +12,15 @@
 </template>
 
 <script>
-import { checkFile } from '../api'
+import { checkFile, upaloadFileApi, mergeFileSlicesApi } from '../api'
 import { createChunk, calcSliceHash } from '../utils'
+import { largeFileUploadConfig } from '../config/index'
+
 export default {
   data() {
     return {
-      hash: ''
+      hash: '',
+      chunks: []
     }
   },
   methods: {
@@ -36,19 +39,61 @@ export default {
         this.$message.error(chunkObj.data)
         return
       }
-      const chunks = chunkObj.data
-      const hash = await calcSliceHash(chunks) // 即使是修改了文件名hash值也不会发生变化，除非是修改文件内容
+      this.chunks = chunkObj.data
+      const hash = await calcSliceHash(this.chunks) // 即使是修改了文件名hash值也不会发生变化，除非是修改文件内容
+
       this.hash = hash
-      try {
-        const res = await checkFile({
-          hash,
-          ext: this.file.name.split('.').pop()
-        })
+      const res = await checkFile({
+        hash,
+        ext: this.file.name.split('.').pop()
+      })
 
-        console.log("来了老弟啊", res);
-      } catch (error) {
-
+      const { upload, uploadList } = res
+      if (upload) {
+        return this.$message.success("上传成功")
       }
+
+
+      this.chunks = this.chunks.map((item, index) => {
+        const sliceName = hash + '-' + index
+        const isChunkUploaded = !!uploadList.includes(sliceName)
+
+        return {
+          hash,
+          index,
+          name: sliceName,
+          chunk: item.file,
+          progress: isChunkUploaded ? 100 : 0
+        }
+      })
+      this.uploadChunks(uploadList)
+
+    },
+
+    async uploadChunks(uploadList) {
+      const requests = this.chunks.filter(chunk => !uploadList.includes(chunk.name)).map(chunk => {
+        const form = new FormData()
+        form.append('chunk', chunk.chunk)
+        form.append('hash', chunk.hash)
+        form.append('name', chunk.name)
+        return { form, index: chunk.index, error: 0 }
+      }).map(({ form }) => {
+        return upaloadFileApi(form)
+      })
+
+      await Promise.all(requests)
+      this.$message.success("切片上传成功")
+      this.mergeFileSlices()
+    },
+
+    async mergeFileSlices() {
+      const res = await mergeFileSlicesApi({
+        ext: this.file.name.split('.').pop(),
+        size: largeFileUploadConfig.CHUNK_SIZE,
+        hash: this.hash,
+      })
+
+      this.$message.success("文件上传成功")
     }
   }
 }

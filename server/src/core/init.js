@@ -1,28 +1,34 @@
-const Koa = require("koa");
-const KoaRouter = require("koa-router");
-const requireDirectory = require("require-directory");
+const Koa = require('koa')
+const KoaRouter = require('koa-router')
+const {koaBody} = require('koa-body')
+const requireDirectory = require('require-directory')
 
 class App {
-  static port = 3000;
-  static app;
+  static port = 3000
+  static app
   static initApp() {
-    const app = new Koa();
+    const app = new Koa()
     app.listen(App.port, () => {
       console.log(`
       服务器已启动请访问：http://localhost:${App.port}
-      `);
-    });
-    App.app = app;
+      `)
+    })
+    app.use(
+      koaBody({
+        multipart: true
+      })
+    )
+    App.app = app
   }
 
   static autoInitRouter() {
-    const routerDir = `${process.cwd()}/src/app/v1`;
+    const routerDir = `${process.cwd()}/src/app/v1`
     requireDirectory(module, routerDir, {
       visit: (router) => {
-        router instanceof KoaRouter && App.app.use(router.routes());
-      },
-    });
+        router instanceof KoaRouter && App.app.use(router.routes())
+      }
+    })
   }
 }
 
-module.exports = App;
+module.exports = App
